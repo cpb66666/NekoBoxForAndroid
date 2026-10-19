@@ -1,7 +1,7 @@
-name: Build NekoBox APK
+name: Build NekoBox APK (arm64-v8a)
 
 on:
-  workflow_dispatch: # 支持手动一键点击触发构建
+  workflow_dispatch: # 支持手动点击触发构建
   push:
     branches:
       - main
@@ -11,14 +11,14 @@ on:
 
 jobs:
   build:
-    name: Build APK
+    name: Build arm64-v8a APK
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive' # 关键：必须拉取 submodules 内核源码
+          submodules: 'recursive'
           fetch-depth: 1
 
       - name: Set up Java 17
@@ -44,13 +44,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: Build with Gradle (arm64-v8a only)
         run: |
-          # 仅编译常用架构（节省编译时间和资源）
-          ./gradlew assembleRelease --stacktrace
+          # 仅编译 arm64-v8a 架构，屏蔽其他架构内核构建
+          ./gradlew assembleRelease -PabiFilters=arm64-v8a --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NekoBox-Custom
+          name: NekoBox-arm64-v8a
           path: app/build/outputs/apk/**/release/*.apk
