@@ -126,12 +126,13 @@ class MainActivity : ThemedActivity(),
         }
     }
 
-    fun refreshNavMenu(clashApi: Boolean) {
-        if (::navigation.isInitialized) {
-            navigation.menu.findItem(R.id.nav_traffic)?.isVisible = clashApi
-            navigation.menu.findItem(R.id.nav_tuiguang)?.isVisible = !isPlay
-        }
+fun refreshNavMenu(clashApi: Boolean) {
+    if (::navigation.isInitialized) {
+        navigation.menu.findItem(R.id.nav_traffic)?.isVisible = clashApi
+        // 将这一行改成始终为 true，避免依赖任何 Flavor 特定的 isPlay 变量：
+        navigation.menu.findItem(R.id.nav_tuiguang)?.isVisible = true
     }
+}
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
