@@ -1,7 +1,7 @@
 name: Build NekoBox APK (arm64-v8a)
 
 on:
-  workflow_dispatch: # 支持手动点击触发构建
+  workflow_dispatch: # 支持在 GitHub 网页上手动点击运行
   push:
     branches:
       - main
@@ -12,13 +12,13 @@ on:
 jobs:
   build:
     name: Build arm64-v8a APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: 'recursive'
+          submodules: 'recursive' # 完整递归拉取所有内核子模块
           fetch-depth: 1
 
       - name: Set up Java 17
@@ -31,26 +31,27 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.22'
-          check-latest: true
+          cache: false # 避免根目录缺少 go.sum 导致缓存步骤误报中断
 
       - name: Setup Android NDK
+        id: setup-ndk
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r25c
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle (arm64-v8a only)
+      - name: Build with Gradle (arm64-v8a)
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
-          # 仅编译 arm64-v8a 架构，屏蔽其他架构内核构建
-          ./gradlew assembleRelease -PabiFilters=arm64-v8a --stacktrace
+          # 仅编译 arm64-v8a 架构，使用 --info 捕获精准的代码报错位置与原因
+          ./gradlew assembleDebug -PabiFilters=arm64-v8a --info
 
       - name: Upload APK Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: NekoBox-arm64-v8a
-          path: app/build/outputs/apk/**/release/*.apk
+          path: app/build/outputs/apk/**/*.apk
